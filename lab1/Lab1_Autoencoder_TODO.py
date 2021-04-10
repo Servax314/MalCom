@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 # k = log2(M)
 # n real-value signals (otherwise. for complex-valued signals, 2*n real numbers)
 k = 2
+
 n = 2
 M = 2**k
 R = k/n
@@ -42,9 +43,7 @@ rd.shuffle(x_test)
 
 
 # Printing the shape of x_train and x_test
-print(x_train.shape)  
-print(x_test.shape) 
-print(x_test)
+
 
 
 
@@ -70,8 +69,9 @@ encoded_input = Input(shape=(n,))
 #layer_relu = tf.keras.layers.ReLU()
 #encoded = tf.keras.activations.linear(layer_relu(input_signal))
 
-x=tf.keras.layers.Dense(M, activation='relu')(input_signal)
+x=tf.keras.layers.Dense(M, activation='linear')(input_signal)
 encoded = tf.keras.layers.Dense(n, activation='linear')(x)
+
 
 ######## END OF YOUR CODE      #######
 
@@ -82,12 +82,31 @@ encoded = tf.keras.layers.Dense(n, activation='linear')(x)
 #encoded = BatchNormalization()(encoded)
 
 # Signal constraints
-encoded = Lambda(lambda x: np.sqrt(n) * K.l2_normalize(x, axis=1))(encoded) #energy constraint
+#normalize by the l2 norm and multiply by sqrt(n) why?
+#that's actually the average power norm
+
+encoded = Lambda(lambda x: K.l2_normalize(x, axis=1))(encoded) #energy constraint
 
 
 ######## YOUR CODE STARTS HERE #######
 #### The above command implement a fixed energy constraint. For the question on implementing an average power constraint ####
 #### Comment the above line and write your own command for the power constraint ####
+
+#encoded = Lambda(lambda x: x/np.sqrt(np.mean(np.square(x), axis=1)))(encoded) #energy constraint
+def mean_norm(x):
+
+    sqrt_mean=K.sqrt(K.mean(K.square(x), axis=1))
+    print(sqrt_mean)
+    print(x.shape)
+
+    x[:][0], x[:][1] = x[:][0]/sqrt_mean[k], x[:][1]/sqrt_mean[k]
+        
+    x=tf.conver_to_tensor(x, dtype=tf.float32)
+    return x
+
+#encoded = Lambda(mean_norm)(encoded) #energy constraint
+
+
 ######## END OF YOUR CODE      #######
 
 
@@ -134,13 +153,23 @@ hist = autoencoder.fit(x_train, x_train, epochs=20, batch_size=32,validation_dat
 
 
 # Predicting the test set using the encoder to view the encoded signal
+
 encoded_signal = encoder.predict(x_test) 
+print(encoded_signal)
+
+#print(np.sqrt(n)*K.l2_normalize(encoded_signal, axis=1))
+
 # Predicting the test set using the autoencoder to view (obtain) the encoded (reconstructed) signal
 decoded_signal = autoencoder.predict(x_test)
+print(decoded_signal)
+print(decoded_signal.shape)
+
 
 
 # Plotting the constellation diagram
 encoded_planisphere = encoder.predict(eye_matrix) 
+
+
 plt.title('Constellation')
 plt.xlim(-2, 2)
 plt.ylim(-2, 2)
