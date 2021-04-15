@@ -69,8 +69,8 @@ encoded_input = Input(shape=(n,))
 #layer_relu = tf.keras.layers.ReLU()
 #encoded = tf.keras.activations.linear(layer_relu(input_signal))
 
-x=tf.keras.layers.Dense(M, activation='linear')(input_signal)
-encoded = tf.keras.layers.Dense(n, activation='linear')(x)
+#x=tf.keras.layers.Dense(M, activation='linear')(input_signal)
+encoded = tf.keras.layers.Dense(n, activation='linear')(input_signal)
 
 
 ######## END OF YOUR CODE      #######
@@ -123,8 +123,8 @@ encoded_noise = GaussianNoise(beta_sqrt)(encoded)
 #layer_relu_decode = tf.keras.layers.ReLU()
 #decoded = tf.keras.activations.softmax(layer_relu_decode(encoded_noise))
 
-y=tf.keras.layers.Dense(M, activation='relu')(encoded_noise)
-decoded = tf.keras.layers.Dense(M, activation='softmax')(y)
+#y=tf.keras.layers.Dense(M, activation='relu')(encoded_noise)
+decoded = tf.keras.layers.Dense(M, activation='softmax')(encoded_noise)
 
 # We create the autoencoder with input_signal as the input and output being the final decoder layer
 autoencoder = Model(inputs=input_signal, outputs=decoded)  
