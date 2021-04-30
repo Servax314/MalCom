@@ -69,8 +69,8 @@ encoded_input = Input(shape=(n,))
 #layer_relu = tf.keras.layers.ReLU()
 #encoded = tf.keras.activations.linear(layer_relu(input_signal))
 
-#x=tf.keras.layers.Dense(M, activation='linear')(input_signal)
-encoded = tf.keras.layers.Dense(n, activation='linear')(input_signal)
+x=tf.keras.layers.Dense(M, activation='relu')(input_signal)
+encoded = tf.keras.layers.Dense(n, activation='linear')(x)
 
 
 ######## END OF YOUR CODE      #######
@@ -85,14 +85,14 @@ encoded = tf.keras.layers.Dense(n, activation='linear')(input_signal)
 #normalize by the l2 norm and multiply by sqrt(n) why?
 #that's actually the average power norm
 
-encoded = Lambda(lambda x: K.l2_normalize(x, axis=1))(encoded) #energy constraint
+encoded = Lambda(lambda x: np.sqrt(n)*K.l2_normalize(x, axis=1))(encoded) #energy constraint
+#encoded = Lambda(lambda x: x/ K.sqrt(2/n*tf.norm(x)**2))(encoded)
 
 
 ######## YOUR CODE STARTS HERE #######
 #### The above command implement a fixed energy constraint. For the question on implementing an average power constraint ####
 #### Comment the above line and write your own command for the power constraint ####
 
-#encoded = Lambda(lambda x: x/np.sqrt(np.mean(np.square(x), axis=1)))(encoded) #energy constraint
 def mean_norm(x):
 
     sqrt_mean=K.sqrt(K.mean(K.square(x), axis=1))
@@ -103,9 +103,6 @@ def mean_norm(x):
         
     x=tf.conver_to_tensor(x, dtype=tf.float32)
     return x
-
-#encoded = Lambda(mean_norm)(encoded) #energy constraint
-
 
 ######## END OF YOUR CODE      #######
 
@@ -123,8 +120,8 @@ encoded_noise = GaussianNoise(beta_sqrt)(encoded)
 #layer_relu_decode = tf.keras.layers.ReLU()
 #decoded = tf.keras.activations.softmax(layer_relu_decode(encoded_noise))
 
-#y=tf.keras.layers.Dense(M, activation='relu')(encoded_noise)
-decoded = tf.keras.layers.Dense(M, activation='softmax')(encoded_noise)
+y=tf.keras.layers.Dense(M, activation='relu')(encoded_noise)
+decoded = tf.keras.layers.Dense(M, activation='softmax')(y)
 
 # We create the autoencoder with input_signal as the input and output being the final decoder layer
 autoencoder = Model(inputs=input_signal, outputs=decoded)  
@@ -145,7 +142,7 @@ autoencoder.summary()
 #adam=Adam(lr=0.001)
 #sgd=SGD(lr=0.02)
 
-autoencoder.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['binary_accuracy',BER])  
+autoencoder.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['binary_accuracy',BER])  
 
 # Training of the autoencoder with 200 epochs and batch size of 32 (default value) 
 hist = autoencoder.fit(x_train, x_train, epochs=20, batch_size=32,validation_data=(x_test, x_test))
